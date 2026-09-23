@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  SearchView.swift
 //  NewsApp
 //
 //  Created by !---------? on 20/09/2026.
@@ -7,13 +7,32 @@
 
 import SwiftUI
 
-struct ContentView: View {
-    @StateObject var vm = NewsViewModel()
+struct SearchView: View {
+    @EnvironmentObject var vm:NewsViewModel
+    @State var searchField:String = ""
     
+    var filteredArticles:[Article]{
+        if searchField.isEmpty{
+            return vm.articles
+        }
+        else{
+            return  vm.articles.filter { article in
+                article.title.lowercased().contains(searchField.lowercased()) || (article.description ?? "").lowercased().contains(searchField.lowercased()) || (article.author ?? "").lowercased().contains(searchField.lowercased()) || (article.source.name).lowercased().contains(searchField.lowercased())
+            }
+        }
+    }
+   
     var body: some View {
         NavigationView{
             VStack{
-                List(vm.articles) { article in
+                TextField("Enter a article...", text: $searchField)
+                    .padding()
+                    .font(.system(size: 30, weight: .semibold))
+                    .background(.gray.opacity(0.6))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                
+                List(filteredArticles){ article in
                     NavigationLink {
                         ArticleDetailView(detailView: article)
                     } label: {
@@ -47,31 +66,27 @@ struct ContentView: View {
                             } placeholder: {
                                 Text("Loading...")
                             }
-                            Divider()
-                        }
-
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(radius: 4)
+                    }
                     }
 
-                    .padding()
-                    .background(Color("backgroundColor"))
-                    .cornerRadius(12)
-                    .shadow(color: Color.black.opacity(0.5), radius: 7, x: 0, y: 2)
-                    .padding(.horizontal)
-                }
             }
+            .padding(.vertical)
+        }
         }
         
-        .task{
+        .onAppear {
             Task{
-                await vm.fetchNews(category: "")
+                await vm.fetchNews(category: "general")
             }
         }
-    }
 }
-
-struct ContentView_Previews: PreviewProvider {
+}
+struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
-            
+        SearchView()
     }
 }
